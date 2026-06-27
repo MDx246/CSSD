@@ -3,6 +3,7 @@ const initialState = {
   user: null,
   route: "dashboard",
   sidebarOpen: false,
+  masterDataTab: "departments",
   sets: [
     { id: "SET-240627-001", name: "Major Set", department: "OR", priority: "ด่วน", status: "รับเข้า", owner: "สมชาย", updatedAt: "08:40", cycle: "ยังไม่เข้าเครื่อง" },
     { id: "SET-240627-002", name: "Dressing Set", department: "ER", priority: "ปกติ", status: "ล้าง", owner: "อรทัย", updatedAt: "09:15", cycle: "ยังไม่เข้าเครื่อง" },
@@ -20,6 +21,47 @@ const initialState = {
     { id: "REQ-001", department: "OR", item: "Major Set", qty: 2, status: "รออนุมัติ" },
     { id: "REQ-002", department: "ER", item: "Dressing Set", qty: 6, status: "เตรียมจ่าย" },
     { id: "REQ-003", department: "Ward 4", item: "Suture Set", qty: 3, status: "จ่ายแล้ว" }
+  ],
+  departments: [
+    { id: "DEP-001", code: "OR", name: "ห้องผ่าตัด", type: "Critical", active: true },
+    { id: "DEP-002", code: "ER", name: "ห้องฉุกเฉิน", type: "Urgent", active: true },
+    { id: "DEP-003", code: "ICU", name: "หอผู้ป่วยวิกฤต", type: "Ward", active: true },
+    { id: "DEP-004", code: "WARD4", name: "Ward 4", type: "Ward", active: true },
+    { id: "DEP-005", code: "OPD", name: "ผู้ป่วยนอก", type: "Clinic", active: true }
+  ],
+  setTypes: [
+    { id: "SETT-001", code: "MAJOR", name: "Major Set", sterileDays: 30, ownerDepartment: "OR", active: true },
+    { id: "SETT-002", code: "MINOR", name: "Minor Set", sterileDays: 30, ownerDepartment: "OPD", active: true },
+    { id: "SETT-003", code: "DRESS", name: "Dressing Set", sterileDays: 14, ownerDepartment: "ER", active: true },
+    { id: "SETT-004", code: "SUTURE", name: "Suture Set", sterileDays: 30, ownerDepartment: "WARD4", active: true }
+  ],
+  instruments: [
+    { id: "INS-001", code: "FOR-001", name: "Forceps", category: "จับเนื้อเยื่อ", unit: "ชิ้น", active: true },
+    { id: "INS-002", code: "SCI-001", name: "Scissors", category: "ตัด", unit: "ชิ้น", active: true },
+    { id: "INS-003", code: "CLP-001", name: "Clamp", category: "หนีบ", unit: "ชิ้น", active: true },
+    { id: "INS-004", code: "NDH-001", name: "Needle Holder", category: "เย็บ", unit: "ชิ้น", active: true }
+  ],
+  setTemplates: [
+    { id: "TPL-001", setCode: "MAJOR", instrumentCode: "FOR-001", qty: 2, required: true, active: true },
+    { id: "TPL-002", setCode: "MAJOR", instrumentCode: "SCI-001", qty: 1, required: true, active: true },
+    { id: "TPL-003", setCode: "MAJOR", instrumentCode: "CLP-001", qty: 4, required: true, active: true },
+    { id: "TPL-004", setCode: "SUTURE", instrumentCode: "NDH-001", qty: 1, required: true, active: true }
+  ],
+  supplies: [
+    { id: "SUPM-001", code: "SUP-001", name: "Sterilization Pouch S", unit: "ซอง", min: 300, max: 900, active: true },
+    { id: "SUPM-002", code: "SUP-002", name: "Indicator Tape", unit: "ม้วน", min: 50, max: 150, active: true },
+    { id: "SUPM-003", code: "SUP-003", name: "Chemical Indicator Class 5", unit: "ชิ้น", min: 120, max: 500, active: true },
+    { id: "SUPM-004", code: "SUP-004", name: "Wrapping Sheet 90x90", unit: "ผืน", min: 80, max: 260, active: true }
+  ],
+  machines: [
+    { id: "MAC-001", code: "AUTO-01", name: "Autoclave 1", type: "Sterilizer", status: "พร้อมใช้", pmDate: "2026-07-15", active: true },
+    { id: "MAC-002", code: "AUTO-02", name: "Autoclave 2", type: "Sterilizer", status: "พร้อมใช้", pmDate: "2026-07-20", active: true },
+    { id: "MAC-003", code: "WASH-01", name: "Washer Disinfector", type: "Washer", status: "พร้อมใช้", pmDate: "2026-07-10", active: true }
+  ],
+  users: [
+    { id: "USR-001", username: "admin", name: "Admin CSSD", role: "Admin", department: "CSSD", active: true },
+    { id: "USR-002", username: "cssd01", name: "สมชาย", role: "CSSD Staff", department: "CSSD", active: true },
+    { id: "USR-003", username: "ward01", name: "อรทัย", role: "Ward User", department: "OR", active: true }
   ]
 };
 
@@ -52,6 +94,68 @@ const menus = [
 ];
 
 const statusFlow = ["รับเข้า", "ล้าง", "แพ็ก", "อบฆ่าเชื้อ", "พร้อมจ่าย", "จ่ายแล้ว"];
+
+const masterDataTabs = [
+  ["departments", "หน่วยงาน"],
+  ["setTypes", "Set"],
+  ["instruments", "เครื่องมือ"],
+  ["setTemplates", "รายการใน Set"],
+  ["supplies", "วัสดุ"],
+  ["machines", "เครื่อง CSSD"],
+  ["users", "ผู้ใช้"]
+];
+
+const masterDataDefinitions = {
+  departments: {
+    title: "หน่วยงาน",
+    subtitle: "ต้นทางและปลายทางของการส่งตรวจรับ เบิก จ่าย และคืนเครื่องมือ",
+    prefix: "DEP",
+    fields: [["code", "รหัส"], ["name", "ชื่อหน่วยงาน"], ["type", "ประเภท"]],
+    columns: [["code", "รหัส"], ["name", "ชื่อ"], ["type", "ประเภท"], ["active", "สถานะ"]]
+  },
+  setTypes: {
+    title: "ประเภท Set",
+    subtitle: "รายการชุดเครื่องมือมาตรฐาน พร้อมอายุ sterile และหน่วยงานเจ้าของ",
+    prefix: "SETT",
+    fields: [["code", "รหัส"], ["name", "ชื่อ Set"], ["sterileDays", "อายุ Sterile (วัน)", "number"], ["ownerDepartment", "หน่วยงานเจ้าของ"]],
+    columns: [["code", "รหัส"], ["name", "ชื่อ Set"], ["sterileDays", "อายุ Sterile"], ["ownerDepartment", "เจ้าของ"], ["active", "สถานะ"]]
+  },
+  instruments: {
+    title: "รายการเครื่องมือ",
+    subtitle: "คลังชื่อเครื่องมือกลาง ก่อนนำไปประกอบเป็น template ของแต่ละ set",
+    prefix: "INS",
+    fields: [["code", "รหัส"], ["name", "ชื่อเครื่องมือ"], ["category", "หมวดหมู่"], ["unit", "หน่วยนับ"]],
+    columns: [["code", "รหัส"], ["name", "ชื่อ"], ["category", "หมวด"], ["unit", "หน่วย"], ["active", "สถานะ"]]
+  },
+  setTemplates: {
+    title: "รายการใน Set",
+    subtitle: "กำหนด checklist ว่าแต่ละ set ต้องมีเครื่องมืออะไร จำนวนเท่าไร",
+    prefix: "TPL",
+    fields: [["setCode", "รหัส Set"], ["instrumentCode", "รหัสเครื่องมือ"], ["qty", "จำนวน", "number"], ["required", "บังคับ", "boolean"]],
+    columns: [["setCode", "Set"], ["instrumentCode", "เครื่องมือ"], ["qty", "จำนวน"], ["required", "บังคับ"], ["active", "สถานะ"]]
+  },
+  supplies: {
+    title: "วัสดุสิ้นเปลือง",
+    subtitle: "รายการวัสดุสำหรับ stock, ตัดใช้, min/max และ reorder",
+    prefix: "SUPM",
+    fields: [["code", "รหัส"], ["name", "ชื่อวัสดุ"], ["unit", "หน่วย"], ["min", "Min", "number"], ["max", "Max", "number"]],
+    columns: [["code", "รหัส"], ["name", "ชื่อ"], ["unit", "หน่วย"], ["min", "Min"], ["max", "Max"], ["active", "สถานะ"]]
+  },
+  machines: {
+    title: "เครื่อง CSSD",
+    subtitle: "เครื่องอบ เครื่องล้าง และอุปกรณ์หลักที่ใช้กับรอบงานและ PM",
+    prefix: "MAC",
+    fields: [["code", "รหัส"], ["name", "ชื่อเครื่อง"], ["type", "ประเภท"], ["status", "สถานะ"], ["pmDate", "PM ถัดไป", "date"]],
+    columns: [["code", "รหัส"], ["name", "ชื่อ"], ["type", "ประเภท"], ["status", "สถานะเครื่อง"], ["pmDate", "PM ถัดไป"], ["active", "สถานะ"]]
+  },
+  users: {
+    title: "ผู้ใช้และสิทธิ์",
+    subtitle: "ผู้ใช้งานตั้งต้นสำหรับ role permission ของระบบรุ่นจริง",
+    prefix: "USR",
+    fields: [["username", "Username"], ["name", "ชื่อ"], ["role", "Role"], ["department", "หน่วยงาน"]],
+    columns: [["username", "Username"], ["name", "ชื่อ"], ["role", "Role"], ["department", "หน่วยงาน"], ["active", "สถานะ"]]
+  }
+};
 
 const moduleBlueprints = {
   request: {
@@ -280,7 +384,7 @@ function page() {
     consume: () => modulePage("consume"),
     search: () => modulePage("search"),
     departmentReports: () => modulePage("departmentReports"),
-    masterData: () => modulePage("masterData"),
+    masterData: masterDataPage,
     verify: () => modulePage("verify"),
     resterile: () => modulePage("resterile"),
     management: () => modulePage("management"),
@@ -325,6 +429,49 @@ function modulePage(key) {
   `;
 }
 
+function masterDataPage() {
+  const activeKey = state.masterDataTab || "departments";
+  const definition = masterDataDefinitions[activeKey] || masterDataDefinitions.departments;
+  const total = masterDataTabs.reduce((sum, [key]) => sum + masterRows(key).length, 0);
+  const inactive = masterDataTabs.reduce((sum, [key]) => sum + masterRows(key).filter(row => row.active === false).length, 0);
+  return `
+    ${pageHeader("Master Data", "ข้อมูลตั้งต้นกลางสำหรับทุก workflow ของ CSSD")}
+    <section class="metrics">
+      <div class="metric"><span class="muted">กลุ่มข้อมูล</span><b>${masterDataTabs.length}</b><span>กลุ่ม</span></div>
+      <div class="metric"><span class="muted">รายการทั้งหมด</span><b>${total}</b><span>records</span></div>
+      <div class="metric"><span class="muted">เปิดใช้งาน</span><b>${total - inactive}</b><span>records</span></div>
+      <div class="metric"><span class="muted">ปิดใช้งาน</span><b>${inactive}</b><span>records</span></div>
+    </section>
+    <section class="panel">
+      <div class="tabs" role="tablist">
+        ${masterDataTabs.map(([key, label]) => `
+          <button class="tab-btn ${activeKey === key ? "active" : ""}" data-master-tab="${key}" type="button">
+            ${label}
+            <span>${masterRows(key).length}</span>
+          </button>
+        `).join("")}
+      </div>
+      <div class="master-layout">
+        <div>
+          <div class="panel-head inline-head">
+            <div>
+              <h2>${definition.title}</h2>
+              <p class="muted">${definition.subtitle}</p>
+            </div>
+            ${badge("Master")}
+          </div>
+          <div class="table-wrap">${masterDataTable(activeKey)}</div>
+        </div>
+        <aside class="master-form">
+          <h2>เพิ่ม${definition.title}</h2>
+          <p class="muted">รายการใหม่จะบันทึกใน browser นี้ก่อน รุ่น backend จะย้ายไปฐานข้อมูลกลาง</p>
+          ${masterDataForm(activeKey)}
+        </aside>
+      </div>
+    </section>
+  `;
+}
+
 function dashboardPage() {
   const counts = Object.fromEntries(statusFlow.map(status => [status, state.sets.filter(item => item.status === status).length]));
   return `
@@ -357,6 +504,8 @@ function dashboardPage() {
 }
 
 function receivePage() {
+  const departmentOptions = activeMasterRows("departments").map(item => `<option value="${item.code}">${item.code} - ${item.name}</option>`).join("");
+  const setOptions = activeMasterRows("setTypes").map(item => `<option value="${item.name}">${item.code} - ${item.name}</option>`).join("");
   return `
     ${pageHeader("รับเข้า / ตรวจรับ", "บันทึกรายการ set จากหน่วยงานและส่งเข้าสู่คิว CSSD")}
     <section class="grid-2">
@@ -366,12 +515,14 @@ function receivePage() {
           <form class="form-grid" data-action="add-set">
             <div class="field">
               <label>ชื่อ Set</label>
-              <input class="input" name="name" placeholder="เช่น Major Set" required>
+              <select class="select" name="name" required>
+                ${setOptions || "<option>Major Set</option>"}
+              </select>
             </div>
             <div class="field">
               <label>หน่วยงาน</label>
               <select class="select" name="department">
-                <option>OR</option><option>ER</option><option>OPD</option><option>Ward 4</option><option>ICU</option>
+                ${departmentOptions || "<option>OR</option><option>ER</option><option>OPD</option><option>Ward 4</option><option>ICU</option>"}
               </select>
             </div>
             <div class="field">
@@ -548,6 +699,98 @@ function settingsPage() {
   `;
 }
 
+function masterDataTable(key) {
+  const definition = masterDataDefinitions[key];
+  const rows = masterRows(key);
+  if (!rows.length) return `<div class="empty">ยังไม่มีข้อมูลตั้งต้น</div>`;
+  return `
+    <table>
+      <thead>
+        <tr>
+          ${definition.columns.map(([, label]) => `<th>${label}</th>`).join("")}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(row => `
+          <tr>
+            ${definition.columns.map(([field]) => `<td>${masterCell(row[field], field)}</td>`).join("")}
+            <td>
+              <button class="btn ghost" data-toggle-master="${key}" data-master-id="${row.id}">
+                ${row.active === false ? "เปิดใช้" : "ปิดใช้"}
+              </button>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function masterDataForm(key) {
+  const definition = masterDataDefinitions[key];
+  return `
+    <form class="form-grid master-fields" data-action="add-master" data-master-key="${key}">
+      ${definition.fields.map(([name, label, type = "text"]) => `
+        <div class="field ${definition.fields.length > 4 ? "" : "full"}">
+          <label>${label}</label>
+          ${masterFieldInput(name, type)}
+        </div>
+      `).join("")}
+      <div class="full toolbar">
+        <button class="btn primary" type="submit">บันทึกข้อมูลตั้งต้น</button>
+      </div>
+    </form>
+  `;
+}
+
+function masterFieldInput(name, type) {
+  if (type === "boolean") {
+    return `
+      <select class="select" name="${name}">
+        <option value="true">ใช่</option>
+        <option value="false">ไม่ใช่</option>
+      </select>
+    `;
+  }
+  return `<input class="input" name="${name}" type="${type}" required>`;
+}
+
+function masterCell(value, field) {
+  if (field === "active") return badge(value === false ? "ปิดใช้งาน" : "เปิดใช้งาน");
+  if (field === "required") return badge(value ? "บังคับ" : "ตัวเลือก");
+  if (value === undefined || value === "") return "-";
+  return String(value);
+}
+
+function masterRows(key) {
+  return Array.isArray(state[key]) ? state[key] : [];
+}
+
+function activeMasterRows(key) {
+  return masterRows(key).filter(row => row.active !== false);
+}
+
+function addMasterRecord(key, form) {
+  const definition = masterDataDefinitions[key];
+  if (!definition) return;
+  const data = new FormData(form);
+  const nextNumber = String(masterRows(key).length + 1).padStart(3, "0");
+  const record = { id: `${definition.prefix}-${nextNumber}`, active: true };
+  definition.fields.forEach(([name, , type = "text"]) => {
+    const value = data.get(name);
+    if (type === "number") record[name] = Number(value || 0);
+    else if (type === "boolean") record[name] = value === "true";
+    else record[name] = value;
+  });
+  state[key] = [record, ...masterRows(key)];
+}
+
+function toggleMasterRecord(key, id) {
+  const row = masterRows(key).find(item => item.id === id);
+  if (row) row.active = row.active === false;
+}
+
 function setsTable(rows, withAction = false) {
   if (!rows.length) return `<div class="empty">ยังไม่มีรายการ</div>`;
   return `
@@ -572,10 +815,10 @@ function setsTable(rows, withAction = false) {
 
 function badge(text) {
   let color = "";
-  if (["พร้อมจ่าย", "จ่ายแล้ว", "พร้อมใช้", "ปกติ"].includes(text)) color = "green";
+  if (["พร้อมจ่าย", "จ่ายแล้ว", "พร้อมใช้", "ปกติ", "เปิดใช้งาน", "บังคับ"].includes(text)) color = "green";
   if (["ล้าง", "แพ็ก", "เตรียมจ่าย", "ใกล้ PM"].includes(text)) color = "amber";
-  if (["รับเข้า", "อบฆ่าเชื้อ", "รออนุมัติ", "เต็มสิทธิ์", "ปฏิบัติงาน", "หน่วยงาน"].includes(text)) color = "blue";
-  if (["ต่ำกว่า min"].includes(text)) color = "red";
+  if (["รับเข้า", "อบฆ่าเชื้อ", "รออนุมัติ", "เต็มสิทธิ์", "ปฏิบัติงาน", "หน่วยงาน", "Master", "ตัวเลือก"].includes(text)) color = "blue";
+  if (["ต่ำกว่า min", "ปิดใช้งาน"].includes(text)) color = "red";
   return `<span class="badge ${color}">${text}</span>`;
 }
 
@@ -616,6 +859,14 @@ function bindEvents() {
     });
   });
 
+  document.querySelectorAll("[data-master-tab]").forEach(button => {
+    button.addEventListener("click", () => {
+      state.masterDataTab = button.dataset.masterTab;
+      saveState();
+      render();
+    });
+  });
+
   document.querySelectorAll("[data-action]").forEach(element => {
     element.addEventListener("click", event => {
       const action = element.dataset.action;
@@ -637,6 +888,15 @@ function bindEvents() {
       if (action === "print-sticker") {
         window.print();
       }
+    });
+  });
+
+  document.querySelectorAll('[data-action="add-master"]').forEach(form => {
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      addMasterRecord(form.dataset.masterKey, form);
+      saveState();
+      render();
     });
   });
 
@@ -699,6 +959,14 @@ function bindEvents() {
       const req = state.requests.find(row => row.id === button.dataset.requestNext);
       const flow = ["รออนุมัติ", "เตรียมจ่าย", "จ่ายแล้ว"];
       if (req) req.status = flow[Math.min(flow.indexOf(req.status) + 1, flow.length - 1)];
+      saveState();
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-toggle-master]").forEach(button => {
+    button.addEventListener("click", () => {
+      toggleMasterRecord(button.dataset.toggleMaster, button.dataset.masterId);
       saveState();
       render();
     });
