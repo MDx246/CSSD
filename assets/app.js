@@ -26,18 +26,125 @@ const initialState = {
 let state = loadState();
 
 const menus = [
+  ["request", "RQ", "เบิกของ"],
+  ["consume", "CU", "ตัดใช้"],
+  ["receive", "IN", "ตรวจรับ"],
+  ["search", "SE", "ค้นหา"],
   ["dashboard", "DB", "Dashboard"],
-  ["receive", "IN", "รับเข้า / ตรวจรับ"],
-  ["workflow", "WF", "Workflow CSSD"],
-  ["dispatch", "DO", "เบิก / จ่าย / คืน"],
-  ["stock", "ST", "คลัง CSSD"],
-  ["stickers", "QR", "Sticker / Barcode"],
-  ["reports", "RP", "รายงาน"],
-  ["assets", "PM", "Asset / PM"],
-  ["settings", "US", "ผู้ใช้ / ตั้งค่า"]
+  ["departmentReports", "DR", "รายงาน (หน่วยงาน)"],
+  ["stickers", "QR", "พิมพ์สติ๊กเกอร์"],
+  ["masterData", "MD", "เปลี่ยนข้อมูล"],
+  ["verify", "CK", "ตรวจสอบ"],
+  ["dispatch", "DO", "จ่ายของ"],
+  ["settings", "ST", "ตั้งค่า"],
+  ["resterile", "RS", "Resterile / คืน / ลบ"],
+  ["cssdStock", "CS", "คลัง CSSD"],
+  ["cssdReports", "CR", "รายงาน (CSSD)"],
+  ["assets", "PM", "ระบบ Asset / PM"],
+  ["management", "MG", "ระบบจัดการ"],
+  ["stockControl", "SC", "ระบบคุม STOCK"],
+  ["tracking", "TR", "ระบบติดตาม"],
+  ["ai", "AI", "ระบบ AI"],
+  ["monitor", "MO", "Monitor Dashboard"],
+  ["manual", "MN", "คู่มือการใช้งาน"],
+  ["training", "TN", "ระบบ Training"],
+  ["logout", "LO", "ออกจากระบบ"]
 ];
 
 const statusFlow = ["รับเข้า", "ล้าง", "แพ็ก", "อบฆ่าเชื้อ", "พร้อมจ่าย", "จ่ายแล้ว"];
+
+const moduleBlueprints = {
+  request: {
+    title: "เบิกของ",
+    subtitle: "คำขอเบิกจากหน่วยงานและการอนุมัติรายการก่อนส่งให้ CSSD จัดเตรียม",
+    metrics: [["รออนุมัติ", state.requests.filter(req => req.status === "รออนุมัติ").length], ["เตรียมจ่าย", state.requests.filter(req => req.status === "เตรียมจ่าย").length], ["จ่ายแล้ว", state.requests.filter(req => req.status === "จ่ายแล้ว").length]],
+    tasks: ["สร้างใบเบิกจากหน่วยงาน", "ตรวจสอบ stock/set พร้อมจ่าย", "อนุมัติหรือปฏิเสธคำขอ", "ส่งต่อรายการไปหน้าจ่ายของ"]
+  },
+  consume: {
+    title: "ตัดใช้",
+    subtitle: "บันทึกการใช้วัสดุสิ้นเปลืองและเชื่อมกับงาน pack/load ของ CSSD",
+    metrics: [["วัสดุทั้งหมด", state.stock.length], ["ต่ำกว่า min", lowStock().length], ["รอเบิกเพิ่ม", lowStock().length]],
+    tasks: ["ตัดใช้ตาม set หรือ load", "ระบุ lot/วันหมดอายุ", "เชื่อม stock movement", "แจ้งเตือนเมื่อคงเหลือต่ำ"]
+  },
+  search: {
+    title: "ค้นหา",
+    subtitle: "ค้นหา set, tracking number, load, หน่วยงาน และสถานะล่าสุด",
+    metrics: [["Tracking", state.sets.length], ["คำขอเบิก", state.requests.length], ["Stock", state.stock.length]],
+    tasks: ["ค้นด้วย QR/Barcode", "ค้นตามหน่วยงาน", "ค้นตามรอบอบ", "เปิด timeline ย้อนหลัง"]
+  },
+  departmentReports: {
+    title: "รายงาน (หน่วยงาน)",
+    subtitle: "รายงานสำหรับ OR, ER, Ward และหน่วยงานผู้ส่ง/ผู้เบิก",
+    metrics: [["หน่วยงาน", Object.keys(groupCount(state.sets, "department")).length], ["คำขอเบิก", state.requests.length], ["จ่ายแล้ว", state.requests.filter(req => req.status === "จ่ายแล้ว").length]],
+    tasks: ["ประวัติการส่งเครื่องมือ", "ประวัติการขอเบิก", "รายการรอรับคืน", "สรุปปริมาณงานรายเดือน"]
+  },
+  masterData: {
+    title: "เปลี่ยนข้อมูล",
+    subtitle: "แก้ไข master data เช่น set, หน่วยงาน, เครื่องมือ และรายการวัสดุ",
+    metrics: [["Set", state.sets.length], ["หน่วยงาน", Object.keys(groupCount(state.sets, "department")).length], ["วัสดุ", state.stock.length]],
+    tasks: ["จัดการรายการ set", "จัดการรายการเครื่องมือใน set", "จัดการหน่วยงาน", "จัดการเครื่องอบ/อุปกรณ์"]
+  },
+  verify: {
+    title: "ตรวจสอบ",
+    subtitle: "จุดตรวจคุณภาพก่อน release, ก่อนจ่าย และเมื่อพบความผิดปกติ",
+    metrics: [["รอตรวจ", state.sets.filter(item => item.status === "อบฆ่าเชื้อ").length], ["พร้อมจ่าย", state.sets.filter(item => item.status === "พร้อมจ่าย").length], ["Load fail", 0]],
+    tasks: ["ตรวจผล chemical indicator", "ตรวจผล biological indicator", "ตรวจสภาพห่อ sterile", "บันทึก nonconformance"]
+  },
+  resterile: {
+    title: "Resterile / คืน / ลบ",
+    subtitle: "จัดการ set หมดอายุ คืนจากหน่วยงาน ส่งอบซ้ำ หรือยกเลิกรายการอย่างมี audit",
+    metrics: [["คืนวันนี้", 0], ["รอ Resterile", 0], ["ยกเลิก", 0]],
+    tasks: ["รับคืนจากหน่วยงาน", "ส่งเข้า resterile", "บันทึกเหตุผลการลบ", "เก็บ audit log ทุก action"]
+  },
+  cssdReports: {
+    title: "รายงาน (CSSD)",
+    subtitle: "รายงานบริหาร CSSD, KPI, workload, indicator และ sterilization history",
+    metrics: [["Turnaround", "4.2 ชม."], ["Load วันนี้", 3], ["งานค้าง", state.sets.filter(item => item.status !== "จ่ายแล้ว").length]],
+    tasks: ["รายงานปริมาณงาน", "รายงานรอบอบ", "รายงานตัวชี้วัด", "ส่งออก Excel/PDF"]
+  },
+  management: {
+    title: "ระบบจัดการ",
+    subtitle: "เครื่องมือสำหรับหัวหน้า CSSD ในการติดตามคน งาน กะ และการอนุมัติ",
+    metrics: [["ผู้ปฏิบัติงาน", 3], ["กะวันนี้", 2], ["งานค้าง", state.sets.filter(item => item.status !== "จ่ายแล้ว").length]],
+    tasks: ["จัดกะเจ้าหน้าที่", "มอบหมายงาน", "อนุมัติการแก้ไขข้อมูล", "ติดตาม productivity รายคน"]
+  },
+  stockControl: {
+    title: "ระบบคุม STOCK",
+    subtitle: "ควบคุม stock กลาง, lot, FEFO, min/max และการเคลื่อนไหวของวัสดุ",
+    metrics: [["รายการวัสดุ", state.stock.length], ["ต่ำกว่า min", lowStock().length], ["รับเพิ่มรออนุมัติ", 0]],
+    tasks: ["รับเข้าวัสดุ", "ตัดจ่ายวัสดุ", "คุม lot/วันหมดอายุ", "รายงาน stock movement"]
+  },
+  tracking: {
+    title: "ระบบติดตาม",
+    subtitle: "ติดตามตำแหน่งและสถานะ set ตั้งแต่หน่วยงานถึง CSSD และกลับสู่หน่วยงาน",
+    metrics: [["กำลังดำเนินการ", state.sets.filter(item => item.status !== "จ่ายแล้ว").length], ["พร้อมจ่าย", state.sets.filter(item => item.status === "พร้อมจ่าย").length], ["จ่ายแล้ว", state.sets.filter(item => item.status === "จ่ายแล้ว").length]],
+    tasks: ["แสดง timeline ราย set", "ติดตามรถ/จุดรับส่ง", "แจ้งเตือนสถานะ", "ค้นหาตำแหน่งล่าสุด"]
+  },
+  ai: {
+    title: "ระบบ AI",
+    subtitle: "พื้นที่ต่อยอด AI สำหรับคาดการณ์ workload, stock, anomaly และช่วยสรุปรายงาน",
+    metrics: [["โมเดล", 0], ["แจ้งเตือน", 0], ["ข้อเสนอแนะ", 3]],
+    tasks: ["พยากรณ์ปริมาณงาน", "แนะนำ stock reorder", "ตรวจจับ load ผิดปกติ", "สรุปรายงานผู้บริหาร"]
+  },
+  monitor: {
+    title: "Monitor Dashboard",
+    subtitle: "หน้าจอแสดงผลใหญ่สำหรับติดตามคิวงาน CSSD แบบ real-time",
+    metrics: [["รับเข้า", state.sets.filter(item => item.status === "รับเข้า").length], ["กำลังทำ", state.sets.filter(item => ["ล้าง", "แพ็ก", "อบฆ่าเชื้อ"].includes(item.status)).length], ["พร้อมจ่าย", state.sets.filter(item => item.status === "พร้อมจ่าย").length]],
+    tasks: ["จอคิวรับเข้า", "จอคิวรออบ", "จอพร้อมจ่าย", "ตั้งค่า refresh อัตโนมัติ"]
+  },
+  manual: {
+    title: "คู่มือการใช้งาน",
+    subtitle: "คู่มือ workflow, SOP และคำอธิบายหน้าจอสำหรับเจ้าหน้าที่แต่ละบทบาท",
+    metrics: [["บทเรียน", 8], ["SOP", 5], ["FAQ", 12]],
+    tasks: ["คู่มือ CSSD staff", "คู่มือหน่วยงาน", "SOP การรับเข้า/จ่ายของ", "คู่มือแก้ปัญหาเบื้องต้น"]
+  },
+  training: {
+    title: "ระบบ Training",
+    subtitle: "อบรมเจ้าหน้าที่ใหม่ ทบทวน SOP และเก็บประวัติ competency",
+    metrics: [["หลักสูตร", 4], ["ผู้เรียน", 12], ["รอประเมิน", 2]],
+    tasks: ["บทเรียนออนไลน์", "แบบทดสอบหลังเรียน", "บันทึกผลอบรม", "รายงาน competency"]
+  }
+};
 
 function loadState() {
   const saved = localStorage.getItem("cssd-mvp-state");
@@ -162,13 +269,60 @@ function page() {
     receive: receivePage,
     workflow: workflowPage,
     dispatch: dispatchPage,
+    cssdStock: stockPage,
     stock: stockPage,
     stickers: stickersPage,
     reports: reportsPage,
+    cssdReports: () => modulePage("cssdReports"),
     assets: assetsPage,
-    settings: settingsPage
+    settings: settingsPage,
+    request: () => modulePage("request"),
+    consume: () => modulePage("consume"),
+    search: () => modulePage("search"),
+    departmentReports: () => modulePage("departmentReports"),
+    masterData: () => modulePage("masterData"),
+    verify: () => modulePage("verify"),
+    resterile: () => modulePage("resterile"),
+    management: () => modulePage("management"),
+    stockControl: () => modulePage("stockControl"),
+    tracking: () => modulePage("tracking"),
+    ai: () => modulePage("ai"),
+    monitor: () => modulePage("monitor"),
+    manual: () => modulePage("manual"),
+    training: () => modulePage("training")
   };
   return (pages[state.route] || dashboardPage)();
+}
+
+function modulePage(key) {
+  const module = moduleBlueprints[key];
+  if (!module) return dashboardPage();
+  return `
+    ${pageHeader(module.title, module.subtitle)}
+    <section class="metrics">
+      ${module.metrics.map(([label, value]) => `
+        <div class="metric"><span class="muted">${label}</span><b>${value}</b><span>รายการ</span></div>
+      `).join("")}
+    </section>
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>ขอบเขตงานในโมดูลนี้</h2>${badge("Phase 2")}</div>
+        <div class="panel-body workflow">
+          ${module.tasks.map((task, index) => `
+            <div class="step">
+              <span class="step-num">${index + 1}</span>
+              <div><strong>${task}</strong><p class="muted">เตรียมไว้เป็นหน้าจอทำงานจริงในรอบพัฒนาถัดไป</p></div>
+              ${badge(index === 0 ? "โครงหลัก" : "รอพัฒนา")}
+            </div>
+          `).join("")}
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>ข้อมูลตัวอย่าง</h2></div>
+        <div class="table-wrap">${setsTable(state.sets.slice(0, 4), false)}</div>
+      </div>
+    </section>
+  `;
 }
 
 function dashboardPage() {
@@ -448,6 +602,13 @@ function nextStatus(id) {
 function bindEvents() {
   document.querySelectorAll("[data-route]").forEach(button => {
     button.addEventListener("click", () => {
+      if (button.dataset.route === "logout") {
+        state.loggedIn = false;
+        state.user = null;
+        saveState();
+        render();
+        return;
+      }
       state.route = button.dataset.route;
       state.sidebarOpen = false;
       saveState();
