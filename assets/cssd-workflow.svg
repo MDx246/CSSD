@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="CSSD workflow illustration">
+  <rect width="1200" height="800" fill="#f8fafc"/>
+  <g opacity=".86">
+    <rect x="112" y="146" width="206" height="126" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+    <rect x="374" y="146" width="206" height="126" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+    <rect x="636" y="146" width="206" height="126" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+    <rect x="898" y="146" width="206" height="126" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+    <path d="M318 209h56M580 209h56M842 209h56" stroke="#0f766e" stroke-width="12" stroke-linecap="round"/>
+    <path d="M354 188l22 21-22 21M616 188l22 21-22 21M878 188l22 21-22 21" fill="none" stroke="#0f766e" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="215" cy="209" r="32" fill="#2d6cdf"/>
+    <circle cx="477" cy="209" r="32" fill="#148579"/>
+    <circle cx="739" cy="209" r="32" fill="#b7791f"/>
+    <circle cx="1001" cy="209" r="32" fill="#287d3c"/>
+    <rect x="164" y="334" width="872" height="286" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+    <path d="M210 410h780M210 480h780M210 550h780" stroke="#e2e8f0" stroke-width="4"/>
+    <path d="M360 368v252M620 368v252M820 368v252" stroke="#e2e8f0" stroke-width="4"/>
+    <rect x="208" y="384" width="98" height="24" rx="4" fill="#94a3b8"/>
+    <rect x="410" y="384" width="118" height="24" rx="4" fill="#94a3b8"/>
+    <rect x="666" y="384" width="106" height="24" rx="4" fill="#94a3b8"/>
+    <rect x="858" y="384" width="96" height="24" rx="4" fill="#94a3b8"/>
+    <rect x="208" y="432" width="112" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="410" y="432" width="144" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="666" y="432" width="116" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="858" y="432" width="86" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="208" y="502" width="122" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="410" y="502" width="132" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="666" y="502" width="98" height="22" rx="4" fill="#cbd5e1"/>
+    <rect x="858" y="502" width="112" height="22" rx="4" fill="#cbd5e1"/>
+  </g>
+</svg>
