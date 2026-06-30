@@ -157,6 +157,73 @@ const masterDataDefinitions = {
   }
 };
 
+const fiscalDashboard = {
+  source: "1.สถิติจ่ายปีงบประมาณ2566.xlsx",
+  period: "ปีงบประมาณ 2566",
+  setTotal: 349684,
+  setValue: 41483930,
+  supplyTotal: 1714435,
+  supplyValue: 31492418,
+  monthly: [
+    { month: "2565-10", sets: 25361, supplies: 146588 },
+    { month: "2565-11", sets: 26873, supplies: 154913 },
+    { month: "2565-12", sets: 27298, supplies: 149218 },
+    { month: "2566-01", sets: 27526, supplies: 144181 },
+    { month: "2566-02", sets: 26985, supplies: 121110 },
+    { month: "2566-03", sets: 30967, supplies: 137799 },
+    { month: "2566-04", sets: 28203, supplies: 129447 },
+    { month: "2566-05", sets: 30148, supplies: 142271 },
+    { month: "2566-06", sets: 30886, supplies: 136169 },
+    { month: "2566-07", sets: 32466, supplies: 157172 },
+    { month: "2566-08", sets: 31249, supplies: 149660 },
+    { month: "2566-09", sets: 31722, supplies: 145907 }
+  ],
+  topSetItems: [
+    { name: "Set Dressing กลาง", value: 9094800 },
+    { name: "Set Vela", value: 4526000 },
+    { name: "Set ตรวจฟัน", value: 3298350 },
+    { name: "Set Single Basin", value: 1356300 },
+    { name: "ชุดสวนปัสสาวะ", value: 1326200 }
+  ],
+  topSetDepartments: [
+    { name: "ศูนย์เครื่องมือแพทย์", value: 4679680 },
+    { name: "ทันตกรรม", value: 4179790 },
+    { name: "OR", value: 3361570 },
+    { name: "ER", value: 3274135 },
+    { name: "ห้องคลอด", value: 1390120 }
+  ],
+  topSupplyItems: [
+    { name: "สาย Suction", value: 8012820 },
+    { name: "เสื้อกาวน์ใช้แล้วทิ้ง", value: 1778760 },
+    { name: "ถุงมือ Sterile S", value: 1632640 },
+    { name: "Top 12x12", value: 1561440 },
+    { name: "ก๊อส 12x12", value: 1531300 }
+  ],
+  topSupplyDepartments: [
+    { name: "ศูนย์เครื่องมือแพทย์", value: 3542370 },
+    { name: "Micu 3", value: 2395040 },
+    { name: "อายุรกรรมหญิงบน", value: 1769602 },
+    { name: "TICU", value: 1561400 },
+    { name: "ICU ศัลย์", value: 1520030 }
+  ],
+  resterileDepartments: [
+    { name: "จิตเวช", qty: 134, rate: 0.3489583333333333 },
+    { name: "รพ.2", qty: 74, rate: 0.16017316017316016 },
+    { name: "เวชกรรมสังคม", qty: 53, rate: 0.14929577464788732 },
+    { name: "ตึกสงฆ์", qty: 70, rate: 0.10057471264367816 },
+    { name: "x-Ray", qty: 60, rate: 0.064034151547492 }
+  ],
+  machines: [
+    { type: "HYDROGEN PLASMA", name: "รวม", cycles: 811, pieces: 31536 },
+    { type: "HYDROGEN PLASMA", name: "เครื่อง 1", cycles: 1144, pieces: 29983 },
+    { type: "HYDROGEN PLASMA", name: "เครื่อง 2", cycles: 579, pieces: 9980 },
+    { type: "STEAM AUTOCLAVE", name: "รวม", cycles: 208, pieces: 57054 },
+    { type: "STEAM AUTOCLAVE", name: "เครื่อง 7", cycles: 975, pieces: 81316 },
+    { type: "STEAM AUTOCLAVE", name: "เครื่อง 8", cycles: 864, pieces: 51967 },
+    { type: "STEAM AUTOCLAVE", name: "เครื่อง 2", cycles: 598, pieces: 53321 }
+  ]
+};
+
 const moduleBlueprints = {
   request: {
     title: "เบิกของ",
@@ -473,30 +540,86 @@ function masterDataPage() {
 }
 
 function dashboardPage() {
-  const counts = Object.fromEntries(statusFlow.map(status => [status, state.sets.filter(item => item.status === status).length]));
+  const maxMonthly = Math.max(...fiscalDashboard.monthly.map(row => Math.max(row.sets, row.supplies)));
   return `
-    ${pageHeader("Dashboard", "ภาพรวมงาน CSSD วันนี้", `<button class="btn blue" data-route="receive">รับเข้า set</button>`)}
+    ${pageHeader("Dashboard", `ภาพรวมสถิติจ่าย CSSD ${fiscalDashboard.period}`, `<button class="btn blue" data-route="cssdReports">รายงาน CSSD</button>`)}
     <section class="metrics">
-      <div class="metric"><span class="muted">รับเข้าวันนี้</span><b>${state.sets.length}</b><span>รายการ</span></div>
-      <div class="metric"><span class="muted">กำลังดำเนินการ</span><b>${counts["รับเข้า"] + counts["ล้าง"] + counts["แพ็ก"] + counts["อบฆ่าเชื้อ"]}</b><span>รายการ</span></div>
-      <div class="metric"><span class="muted">พร้อมจ่าย</span><b>${counts["พร้อมจ่าย"]}</b><span>รายการ</span></div>
-      <div class="metric"><span class="muted">Stock ต่ำกว่า min</span><b>${lowStock().length}</b><span>รายการ</span></div>
+      <div class="metric"><span class="muted">จ่าย Set ทั่วไป</span><b>${formatNumber(fiscalDashboard.setTotal)}</b><span>รายการ</span></div>
+      <div class="metric"><span class="muted">มูลค่า Set</span><b>${formatMoney(fiscalDashboard.setValue)}</b><span>บาท</span></div>
+      <div class="metric"><span class="muted">จ่ายวัสดุสิ้นเปลือง</span><b>${formatNumber(fiscalDashboard.supplyTotal)}</b><span>รายการ</span></div>
+      <div class="metric"><span class="muted">มูลค่าวัสดุ</span><b>${formatMoney(fiscalDashboard.supplyValue)}</b><span>บาท</span></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>แนวโน้มการจ่ายรายเดือน</h2>
+          <p class="muted">เปรียบเทียบจำนวน Set ทั่วไปกับวัสดุสิ้นเปลืองตามเดือนในปีงบประมาณ</p>
+        </div>
+        ${badge("FY2566")}
+      </div>
+      <div class="chart-bars">
+        ${fiscalDashboard.monthly.map(row => `
+          <div class="month-bar">
+            <div class="bar-pair">
+              <span class="bar set" style="height:${Math.max(8, row.sets / maxMonthly * 100)}%" title="Set ${formatNumber(row.sets)}"></span>
+              <span class="bar supply" style="height:${Math.max(8, row.supplies / maxMonthly * 100)}%" title="วัสดุ ${formatNumber(row.supplies)}"></span>
+            </div>
+            <strong>${monthLabel(row.month)}</strong>
+            <span>${formatCompact(row.sets)} / ${formatCompact(row.supplies)}</span>
+          </div>
+        `).join("")}
+      </div>
+      <div class="chart-legend">
+        <span><i class="legend-dot set"></i>Set ทั่วไป</span>
+        <span><i class="legend-dot supply"></i>วัสดุสิ้นเปลือง</span>
+        <span class="muted">ที่มา: ${fiscalDashboard.source}</span>
+      </div>
     </section>
     <section class="grid-2">
       <div class="panel">
-        <div class="panel-head"><h2>คิวงานล่าสุด</h2><button class="btn ghost" data-route="workflow">ดูทั้งหมด</button></div>
-        <div class="table-wrap">${setsTable(state.sets.slice(0, 5), true)}</div>
+        <div class="panel-head"><h2>Top รายการ Set ตามมูลค่า</h2><button class="btn ghost" data-route="reports">ดูรายงาน</button></div>
+        <div class="rank-list">${rankList(fiscalDashboard.topSetItems)}</div>
       </div>
       <div class="panel">
-        <div class="panel-head"><h2>สถานะ Workflow</h2></div>
-        <div class="panel-body workflow">
-          ${statusFlow.map((status, index) => `
-            <div class="step">
-              <span class="step-num">${index + 1}</span>
-              <div><strong>${status}</strong><p class="muted">${counts[status]} รายการ</p></div>
-              ${badge(status)}
-            </div>
-          `).join("")}
+        <div class="panel-head"><h2>Top หน่วยงานใช้ Set</h2></div>
+        <div class="rank-list">${rankList(fiscalDashboard.topSetDepartments)}</div>
+      </div>
+    </section>
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>Top วัสดุสิ้นเปลือง</h2></div>
+        <div class="rank-list">${rankList(fiscalDashboard.topSupplyItems)}</div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>หน่วยงานใช้วัสดุสูงสุด</h2></div>
+        <div class="rank-list">${rankList(fiscalDashboard.topSupplyDepartments)}</div>
+      </div>
+    </section>
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>Resterile ตามหน่วยงาน</h2><span class="badge amber">เฝ้าระวัง</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>หน่วยงาน</th><th>Resterile Qty</th><th>% Qty</th></tr></thead>
+            <tbody>
+              ${fiscalDashboard.resterileDepartments.map(row => `
+                <tr><td>${row.name}</td><td>${formatNumber(row.qty)}</td><td>${formatPercent(row.rate)}</td></tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>เครื่อง / รอบ</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ประเภท</th><th>เครื่อง</th><th>รอบ</th><th>ชิ้น</th></tr></thead>
+            <tbody>
+              ${fiscalDashboard.machines.map(row => `
+                <tr><td>${row.type}</td><td>${row.name}</td><td>${formatNumber(row.cycles)}</td><td>${formatNumber(row.pieces)}</td></tr>
+              `).join("")}
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -697,6 +820,43 @@ function settingsPage() {
       </div>
     </section>
   `;
+}
+
+function rankList(rows) {
+  const max = Math.max(...rows.map(row => row.value));
+  return rows.map((row, index) => `
+    <div class="rank-row">
+      <span class="rank-num">${index + 1}</span>
+      <div>
+        <strong>${row.name}</strong>
+        <div class="rank-track"><span style="width:${Math.max(4, row.value / max * 100)}%"></span></div>
+      </div>
+      <b>${formatMoney(row.value)}</b>
+    </div>
+  `).join("");
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString("th-TH");
+}
+
+function formatMoney(value) {
+  const number = Number(value || 0);
+  if (number >= 1000000) return `${(number / 1000000).toLocaleString("th-TH", { maximumFractionDigits: 1 })}M`;
+  return number.toLocaleString("th-TH");
+}
+
+function formatCompact(value) {
+  return Intl.NumberFormat("th-TH", { notation: "compact", maximumFractionDigits: 1 }).format(Number(value || 0));
+}
+
+function formatPercent(value) {
+  return `${(Number(value || 0) * 100).toLocaleString("th-TH", { maximumFractionDigits: 1 })}%`;
+}
+
+function monthLabel(value) {
+  const [, month] = String(value).split("-");
+  return month || value;
 }
 
 function masterDataTable(key) {
